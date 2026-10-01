@@ -1,28 +1,27 @@
-import { Body, Controller, Delete, Get, Patch, Post } from '@nestjs/common';
-import { createUserSchema, type CreateUserDto } from './dtos/user.request.dto';
+import { Body, Controller, Delete, Get, Patch } from '@nestjs/common';
+
 import { UsersService } from './users.service';
+import { updateUserSchema, type UpdateUserDto } from './dtos/user.request.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
-  @Post('/')
-  async createUser(
-    @Body({ schema: createUserSchema }) createUserDto: CreateUserDto,
+
+  @Get('me')
+  async getProfile() {
+    return this.userService.getProfile();
+  }
+
+  @Patch('me')
+  async updateProfile(
+    @Body({ schema: updateUserSchema })
+    updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.createUser(createUserDto);
+    return this.userService.updateProfile(updateUserDto);
   }
 
-  @Get('/')
-  async getUsers() {
-    return 'hello';
+  @Delete('me')
+  async deleteProfile() {
+    return this.userService.deleteProfile();
   }
-
-  @Get(':id')
-  async getUser() {}
-
-  @Patch(':id')
-  async updateUser() {}
-
-  @Delete(':id')
-  async deleteUser() {}
 }

@@ -1,9 +1,10 @@
 import z from 'zod';
+import { UsersUpdateSchema } from '../users.schema';
 
-export const createUserSchema = z.object({
-  name: z.string().nonempty().trim(),
-  age: z.number(),
-  designation: z.string().trim(),
+export const updateUserSchema = UsersUpdateSchema.pick({
+  firstName: true,
+  lastName: true,
+  email: true,
 });
 
-export type CreateUserDto = z.infer<typeof createUserSchema>;
+export type UpdateUserDto = z.infer<typeof updateUserSchema>;

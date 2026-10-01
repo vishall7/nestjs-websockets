@@ -1,3 +1,4 @@
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { PgliteDatabase } from 'drizzle-orm/pglite';
+import type { relations } from './schema/relations';
 
-export type Database = NodePgDatabase; // in future will pass angument of
+export type Database = PgliteDatabase<typeof relations>;

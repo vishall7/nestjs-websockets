@@ -1,23 +1,19 @@
 import { Module } from '@nestjs/common';
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { drizzle } from 'drizzle-orm/pglite';
+import { PGlite } from '@electric-sql/pglite';
 import { DATABASE_CONNECTION } from './database.constants';
-import { ConfigService } from '@nestjs/config';
 import type { Database } from './database.types';
+import { relations } from './schema/relations';
 
 @Module({
   providers: [
     {
       provide: DATABASE_CONNECTION,
-      useFactory: (config: ConfigService): Database => {
-        const pool = new Pool({
-          connectionString: config.getOrThrow<string>('DATABASE_URL'),
-          max: config.get<number>('DATABASE_POOL_MAX', 10),
-        });
-
-        return drizzle({ client: pool, relations: {} });
+      useFactory: async (): Promise<Database> => {
+        const client = new PGlite('./data');
+        await client.waitReady;
+        return drizzle({ client, relations });
       },
-      inject: [ConfigService],
     },
   ],
   exports: [DATABASE_CONNECTION],
