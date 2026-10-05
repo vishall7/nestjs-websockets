@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigurationModule } from './config/configuration.module';
+import { SessionManagementModule } from './session-management/session-management.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ConfigurationModule } from './config/configuration.module';
     UsersModule,
     DatabaseModule,
     AuthModule,
+    SessionManagementModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
