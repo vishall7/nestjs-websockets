@@ -1,41 +1,60 @@
-import { Inject, Injectable, ConflictException } from '@nestjs/common';
-import type { SignupDto } from './dtos/auth.request.dto';
-import { DATABASE_CONNECTION } from '../database/database.constants';
-import type { Database } from '../database/database.types';
-import bycrypt from 'bcrypt';
-import { eq } from 'drizzle-orm';
-import { users } from '../database/schema';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import type { LoginDto, SignupDto } from './dtos/auth.request.dto';
+import { JwtService } from '@nestjs/jwt';
+import bcrypt from 'bcrypt';
+import { UsersService } from '../users/users.service';
+import type { JwtPayload } from './jwt-payload.schema';
 
 @Injectable()
 export class AuthService {
-  constructor(@Inject(DATABASE_CONNECTION) db: Database) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async login(loginDto: LoginDto) {
+    const user = await this.usersService.findByEmail(loginDto.email);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const passwordMatches = await bcrypt.compare(
+      loginDto.password,
+      user.passwordHash,
+    );
+
+    if (!passwordMatches) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const accessToken = await this.jwtService.signAsync({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    } satisfies JwtPayload);
+
+    return { accessToken };
+  }
+
   async signup(signupDto: SignupDto) {
-    const existingUser = await this.db.query.users.findFirst({
-      where: eq(users.email, signupDto.email),
-    });
+    const existingUser = await this.usersService.findByEmail(signupDto.email);
 
     if (existingUser) {
       throw new ConflictException('Email already registered');
     }
 
-    const passwordHash = await bcrypt.hash(signupDto.password, 12);
+    const passwordHash = await bcrypt.hash(signupDto.password, 10);
 
-    const [user] = await this.db
-      .insert(users)
-      .values({
-        firstName: signupDto.firstName,
-        lastName: signupDto.lastName,
-        email: signupDto.email,
-        passwordHash,
-      })
-      .returning({
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        role: users.role,
-      });
-
-    return user;
+    return this.usersService.createUser({
+      firstName: signupDto.firstName,
+      lastName: signupDto.lastName,
+      email: signupDto.email,
+      passwordHash,
+    });
   }
 }

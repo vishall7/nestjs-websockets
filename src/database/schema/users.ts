@@ -10,3 +10,6 @@ export const users = pgTable('users', {
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   role: roles().default('standard').notNull(),
 });
+
+export type User = typeof users.$inferSelect;
+export type UserRole = User['role'];

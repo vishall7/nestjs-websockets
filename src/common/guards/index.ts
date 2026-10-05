@@ -1,1 +1,1 @@
-export { DummyGuard } from './dummy.guard';
+export { JwtAuthGuard } from './jwt-auth.guard';

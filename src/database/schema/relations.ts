@@ -12,7 +12,7 @@ export const relations = defineRelations(
       memberships: r.many.sessionMembers(),
     },
     sessions: {
-      createdBy: r.one.users({
+      creator: r.one.users({
         from: r.sessions.createdBy,
         to: r.users.id,
       }),

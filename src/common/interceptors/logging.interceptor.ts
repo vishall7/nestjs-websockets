@@ -23,9 +23,9 @@ export class LoggingInterceptor implements NestInterceptor {
           const end = performance.now();
           console.log(`Response sent... Time taken: ${end - start} ms`);
         },
-        error: (err) => {
-          const end = performance.now();
-          console.log(`Request<${requestId}> failed with ${err?.message}`);
+        error: (err: unknown) => {
+          const message = err instanceof Error ? err.message : String(err);
+          console.log(`Request<${requestId}> failed with ${message}`);
         },
       }),
     );
