@@ -1,8 +1,12 @@
-import type { AuthenticatedUser } from './authenticated-user.types';
+import type { UserRole } from '../../database/schema/users';
 
 declare global {
   namespace Express {
-    interface User extends AuthenticatedUser {}
+    interface User {
+      id: string;
+      email: string;
+      role: UserRole;
+    }
   }
 }
 
