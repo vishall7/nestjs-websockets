@@ -7,8 +7,11 @@ import {
   Patch,
   Post,
   SerializeOptions,
+  UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards';
 import { ResponseMessage } from '../common/decorators/response-message.decorator';
 import type { AuthenticatedUser } from '../common/types';
 import {
@@ -24,6 +27,8 @@ import {
 import { SessionManagementService } from './session-management.service';
 
 @Controller('sessions')
+@UseGuards(RolesGuard)
+@Roles('admin')
 @SerializeOptions({ schema: sessionResponseSchema })
 export class SessionManagementController {
   constructor(

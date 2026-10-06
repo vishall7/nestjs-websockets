@@ -1,9 +1,4 @@
-import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { DATABASE_CONNECTION } from '../database/database.constants';
@@ -23,8 +18,6 @@ export class SessionManagementService {
   ) {}
 
   async create(user: AuthenticatedUser, createSessionDto: CreateSessionDto) {
-    this.ensureAdmin(user);
-
     const [session] = await this.db
       .insert(sessions)
       .values({
@@ -38,8 +31,6 @@ export class SessionManagementService {
   }
 
   async findAll(user: AuthenticatedUser) {
-    this.ensureAdmin(user);
-
     return this.db.query.sessions.findMany({
       where: { createdBy: { eq: user.id } },
       orderBy: { createdAt: 'desc' },
@@ -47,8 +38,6 @@ export class SessionManagementService {
   }
 
   async findOne(user: AuthenticatedUser, id: string) {
-    this.ensureAdmin(user);
-
     const session = await this.db.query.sessions.findFirst({
       where: {
         id: { eq: id },
@@ -68,8 +57,6 @@ export class SessionManagementService {
     id: string,
     updateSessionDto: UpdateSessionDto,
   ) {
-    this.ensureAdmin(user);
-
     const [session] = await this.db
       .update(sessions)
       .set(updateSessionDto)
@@ -84,8 +71,6 @@ export class SessionManagementService {
   }
 
   async remove(user: AuthenticatedUser, id: string) {
-    this.ensureAdmin(user);
-
     const [session] = await this.db
       .delete(sessions)
       .where(and(eq(sessions.id, id), eq(sessions.createdBy, user.id)))
@@ -96,12 +81,6 @@ export class SessionManagementService {
     }
 
     return session;
-  }
-
-  private ensureAdmin(user: AuthenticatedUser) {
-    if (user.role !== 'admin') {
-      throw new ForbiddenException('Only admins can manage sessions');
-    }
   }
 
   private generateJoinCode() {

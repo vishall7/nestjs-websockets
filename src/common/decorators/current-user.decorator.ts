@@ -16,7 +16,7 @@ const getCurrentUser = (
     throw new UnauthorizedException('Authenticated user is missing');
   }
 
-  return request.user as AuthenticatedUser;
+  return request.user;
 };
 
 export const CurrentUser = createParamDecorator(getCurrentUser);
