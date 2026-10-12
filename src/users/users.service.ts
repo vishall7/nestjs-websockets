@@ -53,6 +53,8 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    console.log(user);
+
     return user;
   }
 
