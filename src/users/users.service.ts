@@ -3,6 +3,7 @@ import type { UpdateUserDto } from './dtos/user.request.dto';
 import { DATABASE_CONNECTION } from '../database/database.constants';
 import type { Database } from '../database/database.types';
 import { users } from '../database/schema';
+import type { UserRole } from '../database/schema/users';
 import { eq } from 'drizzle-orm';
 
 export type CreateUserInput = {
@@ -10,6 +11,7 @@ export type CreateUserInput = {
   lastName: string;
   email: string;
   passwordHash: string;
+  role?: UserRole;
 };
 
 @Injectable()
@@ -23,6 +25,15 @@ export class UsersService {
     return this.db.query.users.findFirst({
       where: { email: { eq: email } },
     });
+  }
+
+  async userExists(id: string): Promise<boolean> {
+    const user = await this.db.query.users.findFirst({
+      where: { id: { eq: id } },
+      columns: { id: true },
+    });
+
+    return Boolean(user);
   }
 
   async createUser(input: CreateUserInput) {
@@ -52,8 +63,6 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    console.log(user);
 
     return user;
   }

@@ -27,4 +27,11 @@ export class AuthController {
   async signup(@Body({ schema: signupSchema }) signupDto: SignupDto) {
     return this.authService.signup(signupDto);
   }
+
+  @Post('admin')
+  @IsPublic()
+  @ResponseMessage('Admin user successfully created')
+  async createAdmin(@Body({ schema: signupSchema }) signupDto: SignupDto) {
+    return this.authService.createAdmin(signupDto);
+  }
 }

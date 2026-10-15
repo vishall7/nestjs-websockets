@@ -9,7 +9,6 @@ import {
 import { ResponseMessage } from '../common/decorators/response-message.decorator';
 
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../common/types';
 import { UsersService } from './users.service';
 import { updateUserSchema, type UpdateUserDto } from './dtos/user.request.dto';
 import { userResponseSchema } from './dtos/users.response.dto';
@@ -21,25 +20,25 @@ export class UsersController {
   @Get('me')
   @ResponseMessage('User profile retrieved successfully')
   @SerializeOptions({ schema: userResponseSchema })
-  async getProfile(@CurrentUser() user: AuthenticatedUser) {
-    return this.userService.getProfile(user.id);
+  async getProfile(@CurrentUser('id') userId: string) {
+    return this.userService.getProfile(userId);
   }
 
   @Patch('me')
   @ResponseMessage('User profile updated successfully')
   @SerializeOptions({ schema: userResponseSchema })
   async updateProfile(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser('id') userId: string,
     @Body({ schema: updateUserSchema })
     updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.updateProfile(user.id, updateUserDto);
+    return this.userService.updateProfile(userId, updateUserDto);
   }
 
   @Delete('me')
   @ResponseMessage('User profile deleted successfully')
   @SerializeOptions({ schema: userResponseSchema })
-  async deleteProfile(@CurrentUser() user: AuthenticatedUser) {
-    return this.userService.deleteProfile(user.id);
+  async deleteProfile(@CurrentUser('id') userId: string) {
+    return this.userService.deleteProfile(userId);
   }
 }

@@ -57,4 +57,22 @@ export class AuthService {
       passwordHash,
     });
   }
+
+  async createAdmin(signupDto: SignupDto) {
+    const existingUser = await this.usersService.findByEmail(signupDto.email);
+
+    if (existingUser) {
+      throw new ConflictException('Email already registered');
+    }
+
+    const passwordHash = await bcrypt.hash(signupDto.password, 10);
+
+    return this.usersService.createUser({
+      firstName: signupDto.firstName,
+      lastName: signupDto.lastName,
+      email: signupDto.email,
+      passwordHash,
+      role: 'admin',
+    });
+  }
 }

@@ -44,6 +44,19 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+Each HTTP request is logged by `RequestLoggingMiddleware` with its method, URL,
+status (or `aborted`), duration, and request ID. In development, read the
+terminal running `npm run start:dev`. To save and inspect logs in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force .\logs | Out-Null
+npm run start:dev *>&1 | Tee-Object -FilePath .\logs\app.log
+Select-String -Path .\logs\app.log -Pattern "RequestLoggingMiddleware"
+```
+
+The `logs` directory is intended for local diagnostics and should not be
+committed.
+
 ## Run tests
 
 ```bash

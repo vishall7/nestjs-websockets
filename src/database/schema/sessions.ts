@@ -27,3 +27,5 @@ export const sessions = pgTable('sessions', {
     .references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
+
+export type Session = typeof sessions.$inferSelect;
