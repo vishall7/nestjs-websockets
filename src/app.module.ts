@@ -1,6 +1,12 @@
 import { StandardSchemaSerializerInterceptor } from '@nestjs/common';
 import { TransformInterceptor } from './common/interceptors';
-import { APP_INTERCEPTOR, APP_GUARD, APP_PIPE } from '@nestjs/core/constants';
+import {
+  APP_FILTER,
+  APP_INTERCEPTOR,
+  APP_GUARD,
+  APP_PIPE,
+} from '@nestjs/core/constants';
+import { GlobalExceptionFilter } from './common/filters';
 import { JwtAuthGuard } from './common/guards';
 import { ValidationPipe } from './common/pipes';
 import { RequestContextModule } from './common/request-context/request-context.module';
@@ -22,6 +28,7 @@ import { SessionManagementModule } from './session-management/session-management
     SessionManagementModule,
   ],
   providers: [
+    { provide: APP_FILTER, useClass: GlobalExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
     { provide: APP_INTERCEPTOR, useClass: StandardSchemaSerializerInterceptor },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
@@ -30,6 +37,6 @@ import { SessionManagementModule } from './session-management/session-management
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestLoggingMiddleware).forRoutes('*');
+    consumer.apply(RequestLoggingMiddleware).forRoutes('{*path}');
   }
 }

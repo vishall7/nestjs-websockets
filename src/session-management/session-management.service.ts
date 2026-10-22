@@ -31,7 +31,7 @@ export class SessionManagementService {
         joinCode: this.generateJoinCode(),
         createdBy: userId,
       })
-      .returning();
+      .returning({ id: sessions.id });
 
     return session;
   }
@@ -69,7 +69,7 @@ export class SessionManagementService {
       .update(sessions)
       .set(updateSessionDto)
       .where(and(eq(sessions.id, id), eq(sessions.createdBy, userId)))
-      .returning();
+      .returning({ id: sessions.id });
 
     if (!session) {
       throw new NotFoundException('Session not found');
@@ -86,7 +86,7 @@ export class SessionManagementService {
     const [session] = await this.db
       .delete(sessions)
       .where(and(eq(sessions.id, id), eq(sessions.createdBy, userId)))
-      .returning();
+      .returning({ id: sessions.id });
 
     if (!session) {
       throw new NotFoundException('Session not found');

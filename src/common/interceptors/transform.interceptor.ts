@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { Observable, map } from 'rxjs';
-import type { ApiResponse } from '../types';
+import type { ApiSuccessResponse } from '../types';
 import { ClsService } from 'nestjs-cls';
 import { Reflector } from '@nestjs/core';
 import { RESPONSE_MESSAGE_KEY } from '../decorators/response-message.decorator';
@@ -14,7 +14,7 @@ import { RESPONSE_MESSAGE_KEY } from '../decorators/response-message.decorator';
 @Injectable()
 export class TransformInterceptor implements NestInterceptor<
   unknown,
-  ApiResponse<unknown>
+  ApiSuccessResponse<unknown>
 > {
   constructor(
     private readonly cls: ClsService,
@@ -24,8 +24,8 @@ export class TransformInterceptor implements NestInterceptor<
     context: ExecutionContext,
     next: CallHandler<unknown>,
   ):
-    | Observable<ApiResponse<unknown>>
-    | Promise<Observable<ApiResponse<unknown>>> {
+    | Observable<ApiSuccessResponse<unknown>>
+    | Promise<Observable<ApiSuccessResponse<unknown>>> {
     const response = context.switchToHttp().getResponse<Response>();
     const statusCode = response.statusCode;
     const responseMessage = this.reflector.get<string>(

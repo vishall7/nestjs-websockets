@@ -19,19 +19,23 @@ import {
   updateSessionSchema,
   type UpdateSessionDto,
 } from './dtos/session.request.dto';
-import { sessionResponseSchema } from './dtos/session.response.dto';
+import {
+  sessionIdResponseSchema,
+  sessionListResponseSchema,
+  sessionResponseSchema,
+} from './dtos/session.response.dto';
 import { SessionManagementService } from './session-management.service';
 
 @Controller('sessions')
 @UseGuards(RolesGuard)
 @Roles('admin')
-@SerializeOptions({ schema: sessionResponseSchema })
 export class SessionManagementController {
   constructor(
     private readonly sessionManagementService: SessionManagementService,
   ) {}
 
   @Post()
+  @SerializeOptions({ schema: sessionIdResponseSchema })
   @ResponseMessage('Session created successfully')
   create(
     @CurrentUser('id') userId: string,
@@ -41,19 +45,21 @@ export class SessionManagementController {
   }
 
   @Get()
-  @SerializeOptions({ schema: sessionResponseSchema })
+  @SerializeOptions({ schema: sessionListResponseSchema })
   @ResponseMessage('Sessions retrieved successfully')
   findAll(@CurrentUser('id') userId: string) {
     return this.sessionManagementService.findAll(userId);
   }
 
   @Get(':id')
+  @SerializeOptions({ schema: sessionResponseSchema })
   @ResponseMessage('Session retrieved successfully')
   findOne(@CurrentUser('id') userId: string, @Param('id') id: string) {
     return this.sessionManagementService.findOne(userId, id);
   }
 
   @Patch(':id')
+  @SerializeOptions({ schema: sessionIdResponseSchema })
   @ResponseMessage('Session updated successfully')
   update(
     @CurrentUser('id') userId: string,
@@ -64,6 +70,7 @@ export class SessionManagementController {
   }
 
   @Delete(':id')
+  @SerializeOptions({ schema: sessionIdResponseSchema })
   @ResponseMessage('Session deleted successfully')
   remove(@CurrentUser('id') userId: string, @Param('id') id: string) {
     return this.sessionManagementService.remove(userId, id);
