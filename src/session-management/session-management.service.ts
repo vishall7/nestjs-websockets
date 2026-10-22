@@ -24,11 +24,16 @@ export class SessionManagementService {
       throw new NotFoundException('User not found');
     }
 
+    const { durationMinutes, ...sessionData } = createSessionDto;
+    const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
+
     const [session] = await this.db
       .insert(sessions)
       .values({
-        ...createSessionDto,
+        ...sessionData,
         joinCode: this.generateJoinCode(),
+        status: 'draft',
+        expiresAt,
         createdBy: userId,
       })
       .returning({ id: sessions.id });

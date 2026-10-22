@@ -1,13 +1,14 @@
 import z from 'zod';
+import { sessionStatus } from '../../database/schema/sessions';
 
 export const sessionResponseSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   joinCode: z.string(),
-  durationMinutes: z.number().int(),
-  status: z.enum(['draft', 'open', 'lobby', 'active', 'finished']),
+  status: z.enum(sessionStatus.enumValues),
   createdBy: z.uuid(),
   createdAt: z.date(),
+  expiresAt: z.date().nullable(),
 });
 
 export const sessionListResponseSchema = z.array(sessionResponseSchema);

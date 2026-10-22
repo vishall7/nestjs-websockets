@@ -22,3 +22,4 @@ A prototype and idea project for live time game sessions and leaderboard
 ## Skills
 
 - For creating a new module, use the `module` skill.
+- for achitecture decision please refer to `flow.md`

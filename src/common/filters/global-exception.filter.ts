@@ -25,8 +25,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<Response>();
     const { statusCode, message, details } = this.normalizeException(exception);
+    const serverErrorStatus: number = HttpStatus.INTERNAL_SERVER_ERROR;
 
-    if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (statusCode >= serverErrorStatus) {
       this.logger.error(
         exception instanceof Error ? exception.stack : exception,
       );
@@ -46,7 +47,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     details?: unknown;
   } {
     if (exception instanceof DrizzleQueryError) {
-      return this.normalizeDrizzleException(exception);
+      const drizzleException = this.normalizeDrizzleException(exception);
+      return drizzleException;
     }
 
     if (!(exception instanceof HttpException)) {
