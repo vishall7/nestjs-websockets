@@ -21,7 +21,6 @@ import {
 } from './dtos/session.request.dto';
 import {
   sessionIdResponseSchema,
-  sessionListResponseSchema,
   sessionResponseSchema,
 } from './dtos/session.response.dto';
 import { SessionManagementService } from './session-management.service';
@@ -45,7 +44,7 @@ export class SessionManagementController {
   }
 
   @Get()
-  @SerializeOptions({ schema: sessionListResponseSchema })
+  @SerializeOptions({ schema: sessionResponseSchema })
   @ResponseMessage('Sessions retrieved successfully')
   findAll(@CurrentUser('id') userId: string) {
     return this.sessionManagementService.findAll(userId);

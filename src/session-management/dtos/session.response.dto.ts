@@ -11,8 +11,6 @@ export const sessionResponseSchema = z.object({
   expiresAt: z.date().nullable(),
 });
 
-export const sessionListResponseSchema = z.array(sessionResponseSchema);
-
 /** Mutations: client can GET by id for full session. */
 export const sessionIdResponseSchema = z.object({
   id: z.uuid(),
