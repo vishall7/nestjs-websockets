@@ -17,6 +17,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigurationModule } from './config/configuration.module';
 import { SessionManagementModule } from './session-management/session-management.module';
+import { ParticipationModule } from './participation/participation.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SessionManagementModule } from './session-management/session-management
     DatabaseModule,
     AuthModule,
     SessionManagementModule,
+    ParticipationModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

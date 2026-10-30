@@ -58,30 +58,37 @@ Responsibilities:
 - End the session
 - Enforce session state transitions
 
-Possible lifecycle:
+Current lifecycle:
 
 ```text
 DRAFT
-  ↓
-OPEN
   ↓
 LOBBY
   ↓
 ACTIVE
   ↓
-FINISHED
+EXPIRED
 ```
 
-The current `sessions.ts` table is currently only a persistence model. It does not yet express the business lifecycle.
+The statuses are defined in `src/database/schema/sessions.ts` and currently mean:
+
+- `draft`: the host is configuring the session; participants cannot join yet.
+- `lobby`: the session is available for participants and is waiting to start.
+- `active`: gameplay is in progress; new participants cannot join.
+- `expired`: the session has ended because its configured duration elapsed; it is terminal.
 
 The business module should own rules such as:
 
 ```text
-Only the session host can start a session.
-A finished session cannot be started again.
-A session cannot start without questions.
-A closed session cannot accept new participants.
+Only the session host can move a session from DRAFT to LOBBY.
+Only the session host can start a session from LOBBY.
+A session cannot start without valid questions.
+A session cannot accept new participants unless it is in LOBBY.
+An ACTIVE session cannot return to LOBBY or accept new participants.
+An EXPIRED session cannot be started, reopened, or modified.
 ```
+
+`expiresAt` determines when an active session should expire. The transition to `EXPIRED` should be performed by the session lifecycle owner and should be idempotent.
 
 Suggested name:
 
@@ -124,31 +131,35 @@ Suggested name:
 ParticipationModule
 ```
 
-The invitation flow could be:
+The invitation flow should be:
 
 ```text
-Admin invites user
+Admin invites user while the session is DRAFT or LOBBY
   ↓
 User sees invitation
   ↓
 User accepts or declines
   ↓
-Accepted user joins the lobby
+Accepted user joins the session's LOBBY
 ```
 
-The join-by-identifier flow could be:
+The join-by-identifier flow should be:
 
 ```text
 User submits session code
   ↓
-System validates session is open
+System validates the session is in LOBBY
   ↓
-System validates user may join
+System validates the session has not expired
   ↓
-Participant is added
+System validates the user may join
   ↓
-User enters lobby
+Participant is added with JOINED status
+  ↓
+User enters the lobby
 ```
+
+Users cannot join sessions in DRAFT, ACTIVE, or EXPIRED status.
 
 ---
 
@@ -382,14 +393,16 @@ Do not start with the full quiz engine or leaderboard. Build one complete vertic
 
 Implement:
 
-1. Admin creates a session.
+1. Admin creates a session in `DRAFT`.
 2. System generates a unique join code.
-3. Admin invites or allows users to join.
-4. Standard users accept invitations or join with the code.
-5. Users enter the lobby.
-6. Lobby shows current participants.
+3. Admin configures the session and moves it to `LOBBY`.
+4. Admin invites users or allows users to join with the code.
+5. Standard users accept invitations or join while the session is in `LOBBY`.
+6. Lobby shows participants whose membership status is `JOINED`.
 7. Admin starts the session.
 8. Session changes from `LOBBY` to `ACTIVE`.
+9. The lifecycle owner changes an expired active session to `EXPIRED`.
+10. `EXPIRED` sessions reject new joins and cannot be restarted.
 
 This phase proves the most important foundation:
 
@@ -402,18 +415,16 @@ Authentication
   → session lifecycle
 ```
 
-You will probably need to extend the current session persistence model with concepts such as:
+The current session persistence model already contains the core lifecycle fields:
 
 ```text
-session code
-session status
-duration
-opened at
-started at
-ended at
+join code       → identifies a session for joining
+status          → draft, lobby, active, or expired
+duration        → controls the gameplay window
+expiresAt       → determines when an active session expires
 ```
 
-The exact fields are implementation details. The important business rule is that the session has a controlled lifecycle.
+Additional timestamps such as `openedAt`, `startedAt`, or `endedAt` may be added later if the audit/history requirements need them. The important business rule is that status changes must follow the controlled lifecycle above.
 
 ## Phase 2: Quiz authoring
 
@@ -429,12 +440,13 @@ Add:
 
 Add:
 
-1. Start countdown.
+1. Start countdown when the session enters `ACTIVE`.
 2. Publish questions.
-3. Accept answers.
-4. Enforce timing.
-5. Calculate points.
-6. Broadcast game state over WebSockets.
+3. Accept answers only from `JOINED` members of the active session.
+4. Enforce the session expiration time.
+5. Transition the session to `EXPIRED` when the gameplay window ends.
+6. Calculate points.
+7. Broadcast game state over WebSockets.
 
 ## Phase 4: Results
 
