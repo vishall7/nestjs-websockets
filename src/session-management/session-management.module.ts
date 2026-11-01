@@ -8,5 +8,6 @@ import { SessionManagementService } from './session-management.service';
   imports: [DatabaseModule, UsersModule],
   controllers: [SessionManagementController],
   providers: [SessionManagementService],
+  exports: [SessionManagementService],
 })
 export class SessionManagementModule {}
