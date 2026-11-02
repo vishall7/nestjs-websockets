@@ -20,6 +20,13 @@ export class ParticipationService {
     private readonly sessionManagementService: SessionManagementService,
   ) {}
 
+  async findUserInvitations(userId: string) {
+    return this.db.query.sessionMembers.findMany({
+      where: { userId: { eq: userId } },
+      with: { session: true },
+    });
+  }
+
   async inviteUser(hostId: string, sessionId: string, email: string) {
     const session = await this.sessionManagementService.findOne(
       hostId,

@@ -5,7 +5,13 @@
 
 ## What
 
-Allow an authenticated user to retrieve their invitations so they can decide which sessions to join. The result includes the related session information and current membership status.
+Allow an authenticated user to retrieve their invitations so they can decide which sessions to join. The result includes the related session information and current membership status. This is handled by the single `InvitationsController` used for the invitation resource.
+
+## API route
+
+```text
+GET /invitations
+```
 
 ## Acceptance criteria
 

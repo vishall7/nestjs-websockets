@@ -10,8 +10,10 @@ Deliver the host flow for inviting an existing registered user to a session. The
 ## API route
 
 ```text
-POST /sessions/:sessionId/invitations
+POST /invitations
 ```
+
+The request identifies the target session and registered user. This is the host action for creating an invitation, while all invitation actions remain under the single invitation resource.
 
 ## Acceptance criteria
 
@@ -24,4 +26,4 @@ POST /sessions/:sessionId/invitations
 
 ## Notes
 
-The participation capability must use `UsersModule` rather than directly owning or manipulating user records.
+The participation capability must use `UsersModule` rather than directly owning or manipulating user records. Invitation creation belongs to `InvitationsController` and is not part of `SessionManagementController`.

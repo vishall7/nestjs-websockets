@@ -39,7 +39,7 @@ Provide a consistent participation flow in which a host invites registered users
 
 ## Boundaries
 
-This capability owns invitations, invitation responses, eligibility to join, joining, leaving, and membership state transitions. It depends on `UsersModule` to verify that invited users are registered, on `SessionManagementModule` for session ownership and lifecycle state, and on the identity and access capability to identify authenticated users. Session creation, user profile management, session lifecycle management, realtime lobby presence, gameplay, scoring, notification delivery, and leaderboard behavior are owned elsewhere.
+This capability owns invitations, invitation responses, eligibility to join, joining, leaving, and membership state transitions. An invitation is the participation record connecting a registered user to a session; it is owned by `ParticipationModule`, not by session management or user profile management. It depends on `UsersModule` to verify that invited users are registered, on `SessionManagementModule` for session ownership and lifecycle state, and on the identity and access capability to identify authenticated users. Session creation, user profile management, session lifecycle management, realtime lobby presence, gameplay, scoring, notification delivery, and leaderboard behavior are owned elsewhere.
 
 ## Out of Scope
 

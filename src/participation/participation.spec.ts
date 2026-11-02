@@ -8,6 +8,7 @@ import {
 import { PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
 import type { Database } from '../database/database.types';
 import { InvitationsController } from './invitations.controller';
+import { UserInvitationsController } from './user-invitations.controller';
 import { ParticipationService } from './participation.service';
 
 describe('ParticipationService', () => {
@@ -16,6 +17,7 @@ describe('ParticipationService', () => {
   let findOne: jest.Mock;
   let findByEmail: jest.Mock;
   let findMembership: jest.Mock;
+  let findMemberships: jest.Mock;
   let insert: jest.Mock;
   let service: ParticipationService;
 
@@ -23,6 +25,7 @@ describe('ParticipationService', () => {
     findOne = jest.fn().mockResolvedValue(session);
     findByEmail = jest.fn().mockResolvedValue(user);
     findMembership = jest.fn().mockResolvedValue(undefined);
+    findMemberships = jest.fn().mockResolvedValue([]);
     insert = jest.fn().mockReturnValue({
       values: jest.fn().mockReturnValue({
         returning: jest.fn().mockResolvedValue([
@@ -38,7 +41,12 @@ describe('ParticipationService', () => {
     });
 
     const db = {
-      query: { sessionMembers: { findFirst: findMembership } },
+      query: {
+        sessionMembers: {
+          findFirst: findMembership,
+          findMany: findMemberships,
+        },
+      },
       insert,
     } as unknown as Database;
 
@@ -65,6 +73,50 @@ describe('ParticipationService', () => {
         InvitationsController.prototype.inviteUser,
       ),
     ).toBe(RequestMethod.POST);
+  });
+
+  it('returns only the current user\'s memberships with their sessions', async () => {
+    const invitations = [
+      {
+        id: 'membership-id',
+        sessionId: session.id,
+        userId: user.id,
+        status: 'invited',
+        invitedAt: new Date(),
+        session: {
+          id: session.id,
+          name: 'Trivia night',
+          joinCode: 'TRIVIA01',
+          status: 'draft',
+        },
+      },
+    ];
+    findMemberships.mockResolvedValue(invitations);
+
+    await expect(service.findUserInvitations(user.id)).resolves.toEqual(
+      invitations,
+    );
+    expect(findMemberships).toHaveBeenCalledWith({
+      where: { userId: { eq: user.id } },
+      with: { session: true },
+    });
+  });
+
+  it('exposes the current user invitations collection', () => {
+    expect(Reflect.getMetadata(PATH_METADATA, UserInvitationsController)).toBe(
+      'invitations',
+    );
+    expect(
+      Reflect.getMetadata(
+        PATH_METADATA,
+        UserInvitationsController.prototype.findOwn,
+      ),
+    ).toBe('/');
+    expect(
+      Reflect.getMetadata(
+        METHOD_METADATA,
+        UserInvitationsController.prototype.findOwn,
+      ),    ).toBe(RequestMethod.GET);
   });
 
   it('creates an invited membership for a registered user', async () => {

@@ -5,7 +5,14 @@
 
 ## What
 
-Allow an invited user to accept or decline their invitation while the session is in `DRAFT` or `LOBBY`. Record the response and enforce the membership transitions `invited → accepted` and `invited → declined`.
+Allow an invited user to accept or decline their invitation while the session is in `DRAFT` or `LOBBY`. Record the response and enforce the membership transitions `invited → accepted` and `invited → declined`. These actions are handled by the same `InvitationsController` as invitation creation and retrieval.
+
+## API routes
+
+```text
+POST /invitations/:invitationId/accept
+POST /invitations/:invitationId/decline
+```
 
 ## Acceptance criteria
 
