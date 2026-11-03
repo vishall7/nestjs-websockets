@@ -10,6 +10,8 @@ export const memberStatus = pgEnum('member_status', [
   'left',
 ]);
 
+export type MemberStatus = (typeof memberStatus.enumValues)[number];
+
 export const sessionMembers = pgTable(
   'session_members',
   {

@@ -5,17 +5,21 @@ import {
   NotFoundException,
   RequestMethod,
 } from '@nestjs/common';
-import { PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
+import {
+  PATH_METADATA,
+  METHOD_METADATA,
+  GUARDS_METADATA,
+} from '@nestjs/common/constants';
 import type { Database } from '../database/database.types';
+import { invitationQuerySchema } from './dtos/invitation.request.dto';
 import { InvitationsController } from './invitations.controller';
-import { UserInvitationsController } from './user-invitations.controller';
 import { ParticipationService } from './participation.service';
 
 describe('ParticipationService', () => {
   const session = { id: 'session-id', status: 'draft' as const };
-  const user = { id: 'user-id' };
+  const inviteeUserId = 'user-id';
   let findOne: jest.Mock;
-  let findByEmail: jest.Mock;
+  let userExists: jest.Mock;
   let findMembership: jest.Mock;
   let findMemberships: jest.Mock;
   let insert: jest.Mock;
@@ -23,7 +27,7 @@ describe('ParticipationService', () => {
 
   beforeEach(() => {
     findOne = jest.fn().mockResolvedValue(session);
-    findByEmail = jest.fn().mockResolvedValue(user);
+    userExists = jest.fn().mockResolvedValue(true);
     findMembership = jest.fn().mockResolvedValue(undefined);
     findMemberships = jest.fn().mockResolvedValue([]);
     insert = jest.fn().mockReturnValue({
@@ -32,7 +36,7 @@ describe('ParticipationService', () => {
           {
             id: 'membership-id',
             sessionId: session.id,
-            userId: user.id,
+            userId: inviteeUserId,
             status: 'invited',
             invitedAt: new Date(),
           },
@@ -52,14 +56,14 @@ describe('ParticipationService', () => {
 
     service = new ParticipationService(
       db,
-      { findByEmail } as never,
+      { userExists } as never,
       { findOne } as never,
     );
   });
 
-  it('exposes invitations under the sessions resource', () => {
+  it('exposes the invitation resource routes', () => {
     expect(Reflect.getMetadata(PATH_METADATA, InvitationsController)).toBe(
-      'sessions/:sessionId/invitations',
+      'invitations',
     );
     expect(
       Reflect.getMetadata(
@@ -73,71 +77,103 @@ describe('ParticipationService', () => {
         InvitationsController.prototype.inviteUser,
       ),
     ).toBe(RequestMethod.POST);
+    expect(
+      Reflect.getMetadata(
+        METHOD_METADATA,
+        InvitationsController.prototype.findOwn,
+      ),
+    ).toBe(RequestMethod.GET);
+    expect(
+      Reflect.getMetadata(
+        GUARDS_METADATA,
+        InvitationsController.prototype.findOwn,
+      ),
+    ).toBeUndefined();
+  });
+
+  it('validates the optional status query against member statuses', () => {
+    expect(invitationQuerySchema.safeParse({ status: 'accepted' }).success).toBe(
+      true,
+    );
+    expect(invitationQuerySchema.safeParse({ status: 'declined' }).success).toBe(
+      true,
+    );
+    expect(invitationQuerySchema.safeParse({ status: 'joined' }).success).toBe(
+      false,
+    );
+    expect(invitationQuerySchema.safeParse({ status: 'unknown' }).success).toBe(
+      false,
+    );
+    expect(invitationQuerySchema.safeParse({}).success).toBe(true);
+  });
+
+  it('filters the current user\'s memberships by status', async () => {
+    await service.findUserInvitations(inviteeUserId, 'accepted');
+
+    expect(findMemberships).toHaveBeenCalledWith({
+      where: {
+        userId: { eq: inviteeUserId },
+        status: { eq: 'accepted' },
+      },
+      with: { session: true },
+    });
   });
 
   it('returns only the current user\'s memberships with their sessions', async () => {
     const invitations = [
-      {
-        id: 'membership-id',
+      ...(['invited', 'accepted', 'declined'] as const).map((status) => ({
+        id: `membership-${status}`,
         sessionId: session.id,
-        userId: user.id,
-        status: 'invited',
+        userId: inviteeUserId,
+        status,
         invitedAt: new Date(),
+        respondedAt: status === 'invited' ? null : new Date(),
         session: {
           id: session.id,
           name: 'Trivia night',
           joinCode: 'TRIVIA01',
           status: 'draft',
         },
-      },
+      })),
     ];
     findMemberships.mockResolvedValue(invitations);
 
-    await expect(service.findUserInvitations(user.id)).resolves.toEqual(
+    await expect(service.findUserInvitations(inviteeUserId)).resolves.toEqual(
       invitations,
     );
     expect(findMemberships).toHaveBeenCalledWith({
-      where: { userId: { eq: user.id } },
+      where: { userId: { eq: inviteeUserId } },
       with: { session: true },
     });
   });
 
-  it('exposes the current user invitations collection', () => {
-    expect(Reflect.getMetadata(PATH_METADATA, UserInvitationsController)).toBe(
-      'invitations',
-    );
-    expect(
-      Reflect.getMetadata(
-        PATH_METADATA,
-        UserInvitationsController.prototype.findOwn,
-      ),
-    ).toBe('/');
-    expect(
-      Reflect.getMetadata(
-        METHOD_METADATA,
-        UserInvitationsController.prototype.findOwn,
-      ),    ).toBe(RequestMethod.GET);
-  });
-
   it('creates an invited membership for a registered user', async () => {
     await expect(
-      service.inviteUser('host-id', session.id, 'user@example.com'),
+      service.inviteUser('host-id', session.id, inviteeUserId),
     ).resolves.toMatchObject({
       sessionId: session.id,
-      userId: user.id,
+      userId: inviteeUserId,
       status: 'invited',
     });
 
     expect(findOne).toHaveBeenCalledWith('host-id', session.id);
-    expect(findByEmail).toHaveBeenCalledWith('user@example.com');
+    expect(userExists).toHaveBeenCalledWith(inviteeUserId);
     expect(insert).toHaveBeenCalled();
   });
 
   it('rejects users who are not registered', async () => {
-    findByEmail.mockResolvedValue(undefined);
+    userExists.mockResolvedValue(false);
 
     await expect(
-      service.inviteUser('host-id', session.id, 'missing@example.com'),
+      service.inviteUser('host-id', session.id, inviteeUserId),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('rejects requests from users who do not own the session', async () => {
+    findOne.mockRejectedValue(new NotFoundException('Session not found'));
+
+    await expect(
+      service.inviteUser('host-id', session.id, inviteeUserId),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -145,7 +181,7 @@ describe('ParticipationService', () => {
     findOne.mockResolvedValue({ ...session, status: 'lobby' });
 
     await expect(
-      service.inviteUser('host-id', session.id, 'user@example.com'),
+      service.inviteUser('host-id', session.id, inviteeUserId),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
@@ -153,7 +189,7 @@ describe('ParticipationService', () => {
     findMembership.mockResolvedValue({ id: 'existing-membership' });
 
     await expect(
-      service.inviteUser('host-id', session.id, 'user@example.com'),
+      service.inviteUser('host-id', session.id, inviteeUserId),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 });

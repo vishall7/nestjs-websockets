@@ -13,16 +13,17 @@ Deliver the host flow for inviting an existing registered user to a session. The
 POST /invitations
 ```
 
-The request identifies the target session and registered user. This is the host action for creating an invitation, while all invitation actions remain under the single invitation resource.
+The request must include the target `sessionId` and registered `inviteeUserId`. The authenticated user is the host and must not be supplied in the request body. This is the host action for creating an invitation, while all invitation actions remain under the single invitation resource.
 
 ## Acceptance criteria
 
-- [ ] A host can invite an existing registered user to a session in `DRAFT`.
-- [ ] Invitations are rejected for unregistered users.
-- [ ] Invitations are rejected when the requester does not own the session.
-- [ ] Invitations are rejected when the session is not `DRAFT`.
-- [ ] Duplicate membership for the same user and session is rejected.
-- [ ] A new invitation starts with `invited` status.
+- [x] A host can invite an existing registered user to a session in `DRAFT` using `sessionId` and `inviteeUserId`.
+- [x] Invitations are rejected for unregistered users.
+- [x] The authenticated host is used as the inviter; a host user ID supplied by the client is ignored or rejected.
+- [x] Invitations are rejected when the requester does not own the session.
+- [x] Invitations are rejected when the session is not `DRAFT`.
+- [x] Duplicate membership for the same user and session is rejected.
+- [x] A new invitation starts with `invited` status.
 
 ## Notes
 

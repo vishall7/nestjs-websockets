@@ -13,16 +13,14 @@ export const invitationResponseSchema = z.object({
 const invitationSessionResponseSchema = z.object({
   id: z.uuid(),
   name: z.string(),
-  joinCode: z.string(),
   status: z.enum(sessionStatus.enumValues),
 });
 
 export const invitationWithSessionResponseSchema = z.object({
   id: z.uuid(),
-  sessionId: z.uuid(),
-  userId: z.uuid(),
   status: z.enum(memberStatus.enumValues),
   invitedAt: z.date(),
+  respondedAt: z.date().nullable(),
   session: invitationSessionResponseSchema,
 });
 

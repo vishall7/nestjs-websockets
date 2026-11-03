@@ -8,6 +8,7 @@ import {
 import { DATABASE_CONNECTION } from '../database/database.constants';
 import type { Database } from '../database/database.types';
 import { sessionMembers } from '../database/schema';
+import type { MemberStatus } from '../database/schema/sessionMembers';
 import { SessionManagementService } from '../session-management/session-management.service';
 import { UsersService } from '../users/users.service';
 
@@ -20,14 +21,18 @@ export class ParticipationService {
     private readonly sessionManagementService: SessionManagementService,
   ) {}
 
-  async findUserInvitations(userId: string) {
+  async findUserInvitations(userId: string, status?: MemberStatus) {
+    const where = status
+      ? { userId: { eq: userId }, status: { eq: status } }
+      : { userId: { eq: userId } };
+
     return this.db.query.sessionMembers.findMany({
-      where: { userId: { eq: userId } },
+      where,
       with: { session: true },
     });
   }
 
-  async inviteUser(hostId: string, sessionId: string, email: string) {
+  async inviteUser(hostId: string, sessionId: string, inviteeUserId: string) {
     const session = await this.sessionManagementService.findOne(
       hostId,
       sessionId,
@@ -39,16 +44,14 @@ export class ParticipationService {
       );
     }
 
-    const user = await this.usersService.findByEmail(email);
-
-    if (!user) {
+    if (!(await this.usersService.userExists(inviteeUserId))) {
       throw new NotFoundException('User not found');
     }
 
     const existingMembership = await this.db.query.sessionMembers.findFirst({
       where: {
         sessionId: { eq: sessionId },
-        userId: { eq: user.id },
+        userId: { eq: inviteeUserId },
       },
     });
 
@@ -60,7 +63,7 @@ export class ParticipationService {
       .insert(sessionMembers)
       .values({
         sessionId,
-        userId: user.id,
+        userId: inviteeUserId,
         status: 'invited',
       })
       .returning({
