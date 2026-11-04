@@ -21,9 +21,11 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Quiz Arena
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Quiz Arena is a technical prototype of a real-time multiplayer quiz system. An admin creates and runs a quiz session, registered users participate through a lobby, answers are scored in real time, and the final leaderboard is shown to participants.
+
+The project objective is to demonstrate a complete real-time quiz flow from session creation through the final leaderboard. See [docs/product.md](docs/product.md) for the product description, prototype scope, and technical focus.
 
 ## Project setup
 
